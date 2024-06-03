@@ -7,8 +7,7 @@
     }
 
     SubShader
-    {
-        // URP的shader要在Tags中注明渲染管线是UniversalPipeline
+    {       
         Tags
         {
             "RanderPipline" = "UniversalPipeline"
@@ -17,16 +16,18 @@
 
         HLSLINCLUDE
 
-            // 引入Core.hlsl头文件，替换UnityCG中的cginc
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+         
+             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+               #include "../ShaderLib/RTR.hlsl"
+             #include "../ShaderLib/RTR.hlsl"
 
-            // 将不占空间的材质相关变量放在CBUFFER中，为了兼容SRP Batcher
+           
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
                 half4 _BaseColor;
             CBUFFER_END
 
-            // 材质单独声明，使用DX11风格的新采样方法
+     
             TEXTURE2D (_BaseMap);
             SAMPLER(sampler_BaseMap);
 
@@ -72,6 +73,8 @@
                 half4 frag(Varyings input) : SV_Target
                 {
                     return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
+
+
                 }
             
             ENDHLSL
