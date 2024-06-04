@@ -162,7 +162,7 @@ MBRDFData getBRDFData(float3 specular,float albedo,float smoothness)
 {
 
  MBRDFData  BRDF;
- BRDF.roughness= 1.0 - perceptualSmoothness;//粗糙度等于 1-光泽度
+ BRDF.roughness= 1.0 - smoothness;//粗糙度等于 1-光泽度
  BRDF.specular=specular;
  BRDF.diffuse=albedo*(float3(1.0,1.0,1.0)-specular);
 
@@ -171,7 +171,7 @@ MBRDFData getBRDFData(float3 specular,float albedo,float smoothness)
 }
 
 //直接光照
-float3 LightingPhysicallyBased(MBRDFData data, Light light,half3 N_WS,half3 V_WS,half3 L_WS,float F0)
+float3 LightingPhysicallyBased(MBRDFData data, Light light,half3 N_WS,half3 V_WS,float F0)
 {
 //颜色方向衰减系数
 float3  lightColor=light.color;
@@ -184,8 +184,9 @@ float3 radiance=lightColor*saturate(dot(N_WS,N_WS))*distanceAttenuation;
 //漫反射
   half3 brdf = data.diffuse;
  //TODO:镜面反射值
-
-
+ half3 specular = data.specular* MicrofacetSpecularBRDF(data, N_WS, V_WS, lightDirection, F0);
+ //相加
+ brdf = brdf + specular;
 
 return radiance*brdf;
 }
@@ -228,7 +229,7 @@ return radiance*brdf;
 */
 
 
-float3 MUniversalFragmentPBR(MInputData inputdata,float3 specular,float albedo,float smoothness,float3 emission)
+float3 MUniversalFragmentPBR(MInputData inputdata,float3 specular,float albedo,float smoothness,float3 emission,float F0)
 {
 
 
@@ -244,12 +245,12 @@ aoFactor.directAmbientOcclusion=1;
 from: RealtimeLights.hlsl
 use:获取主光源
 */
- Light mainLight=GetMainLight(inputdata，inputData.shadowMask,aoFactor);
+ Light mainLight=GetMainLight(inputdata,inputData.shadowMask,aoFactor);
  /*
 from: BRDF.hlsl  类似 InitializeBRDFData
 use:获取BRDF所需参数
 */ 
-MBRDFData  BRDF= getBRDFData(specular，albedo，smoothness);
+MBRDFData  BRDF= getBRDFData(specular,albedo,smoothness);
 
   /*
 use:初始化改点各种光照的数据 
@@ -263,10 +264,14 @@ use:初始化改点各种光照的数据
 /*
 use:计算光照  暂时计算主副光源，对baked GI 学习后添加
 */ 
-mLightingData.mainLightColor=LightingPhysicallyBased(BRDF,normalWS,viewDirectionWS,)
+ mLightingData.mainLightColor = LightingPhysicallyBased(BRDF, mainLight, inputdata.normalWS, inputdata.viewDirectionWS,F0);
+
+ /*
+use:TODO其他光照
+*/
 
 
+ return float3(mLightingData.mainLightColor);
 
 
-
-}  
+} 
