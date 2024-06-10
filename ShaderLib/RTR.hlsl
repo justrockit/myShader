@@ -4,7 +4,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Input.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderVariablesFunctions.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Deprecated.hlsl"
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RealtimeLights.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 
  struct MInputData
@@ -21,7 +21,7 @@
   {
     half roughness;//粗糙度值 用于计算DGF
     half3 diffuse;//漫反射值
-    half3 albedo;//反射率
+   // half3 albedo;//反射率
     half3 specular;//镜面反射值 和diffuse要能量守恒
                 
   };
@@ -111,13 +111,13 @@ float3 FresnelSchlick(float3 F0, float VoH)
 float3  MicrofacetSpecularBRDF( MBRDFData data,half3 N_WS,half3 V_WS,half3 L_WS,float3 F0)
 {
  // half
-float H=normalize(V_WS+L_WS);
+ half3 H_WS =normalize(V_WS+L_WS);
 float NoV=dot(N_WS,V_WS);
 float NoH=dot(N_WS,H_WS);
 float NoL=dot(N_WS,L_WS);
 float bottom=4*NoV*NoL;
 float G=SmithGGX(data.roughness,NoV,NoL);
-float3 F=FresnelSchlick(F0, NoV, NoL);
+float3 F=FresnelSchlick(F0, NoV);
 float D=IsotropyGGX(data.roughness,NoH);
 
 
@@ -130,14 +130,14 @@ return  F*G*D/bottom;
 float  MicrofacetSpecularBRDF(MBRDFData data,half3 N_WS,half3 V_WS,half3 L_WS,float F0)
 {
  // half
-float H=normalize(V_WS+L_WS);
+half3 H_WS =normalize(V_WS+L_WS);
 float NoV=dot(N_WS,V_WS);
 float NoH=dot(N_WS,H_WS);
 float NoL=dot(N_WS,L_WS);
-float VoH=dot(N_WS,H);
+float VoH=dot(N_WS, H_WS);
 float bottom=4*NoV*NoL;
 float G=SmithGGX(data.roughness,NoV,NoL);
-float F=FresnelSchlick(F0, NoV, NoL);
+float F=FresnelSchlick(F0, NoV);
 float D=IsotropyGGX(data.roughness,NoH);
 
 return  F*G*D/bottom;
@@ -153,18 +153,15 @@ return  F*G*D/bottom;
 //---------------------------------------------------
 // Lighting计算
 //---------------------------------------------------
-    half roughness;//粗糙度值 用于计算DGF
-    half3 diffuse;//漫反射值
-    half3 albedo;//反射率
-    half3 specular;//镜面反射值 和diffuse要能量守恒
 
-MBRDFData getBRDFData(float3 specular,float albedo,float smoothness)
+MBRDFData getBRDFData(float3 specular,float3 albedo,float smoothness)
 {
 
  MBRDFData  BRDF;
  BRDF.roughness= 1.0 - smoothness;//粗糙度等于 1-光泽度
  BRDF.specular=specular;
  BRDF.diffuse=albedo*(float3(1.0,1.0,1.0)-specular);
+ //BRDF.albedo = albedo;
 
  return  BRDF;
 
@@ -229,7 +226,7 @@ return radiance*brdf;
 */
 
 
-float3 MUniversalFragmentPBR(MInputData inputdata,float3 specular,float albedo,float smoothness,float3 emission,float F0)
+float3 MUniversalFragmentPBR(MInputData inputdata,float3 specular,float3 albedo,float smoothness,float3 emission,float F0)
 {
 
 
@@ -245,7 +242,7 @@ aoFactor.directAmbientOcclusion=1;
 from: RealtimeLights.hlsl
 use:获取主光源
 */
- Light mainLight=GetMainLight(inputdata,inputData.shadowMask,aoFactor);
+ Light mainLight= GetMainLight(inputdata.shadowCoord, inputdata.positionWS, inputdata.shadowMask);
  /*
 from: BRDF.hlsl  类似 InitializeBRDFData
 use:获取BRDF所需参数
