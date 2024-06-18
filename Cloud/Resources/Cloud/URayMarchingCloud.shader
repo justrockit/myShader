@@ -78,7 +78,7 @@
                         //return ComputeWorldSpacePosition(UV, depth, UNITY_MATRIX_I_VP);
 
 
-                   float2 uv=positionCS/_ScaledScreenParams.xy;
+                   float2 uv=positionCS.xy/_ScaledScreenParams.xy;
                    //关于 UNITY_REVERSED_Z z值是否取反的处理，因为远近视口不一样，从近->远用1->0，更好的均匀分步
                    /*
                      UNITY_REVERSED_Z 是一种改变深度缓冲管理方式的技术，它颠倒了Z值的表示方式。在Reversed-Z中，近裁剪面的Z值较大（在DirectX中为1.0），而远裁剪面的Z值较小（在DirectX中为0.0）。这种方式的目的是使深度缓冲中的值在View Space下对应的平面更加均匀分布，从而减少Z-Fighting（深度冲突）现象，并提高渲染精度。
@@ -86,10 +86,21 @@
                    #if UNITY_REVERSED_Z 
 					float depth =SampleSceneDepth(uv);
 				#else
-					float depth = lerp(UNITY_NEAR_CLIP_VALUE, 1, SampleSceneDepth(uv);
+					float depth = lerp(UNITY_NEAR_CLIP_VALUE, 1, SampleSceneDepth(uv));
 				#endif
-
-                    
+                  // ComputeWorldSpacePosition(UV, depth, UNITY_MATRIX_I_VP); 转到NDC 再转到world
+                    float4 ndc=float4(uv.x*2-1,uv.y*2-1,depth,1);
+                    #if UNITY_UV_STARTS_AT_TOP
+    // Our world space, view space, screen space and NDC space are Y-up.
+    // Our clip space is flipped upside-down due to poor legacy Unity design.
+    // The flip is baked into the projection matrix, so we only have to flip
+    // manually when going from CS to NDC and back.
+    ndc.y = -ndc.y;
+#endif
+                    float4 worldpos=mul(UNITY_MATRIX_I_VP,ndc);
+                    worldpos=worldpos/worldpos.w;
+                 //   return ComputeWorldSpacePosition(uv, depth, UNITY_MATRIX_I_VP);
+                    return  worldpos.xyz;
 
                  }
 
