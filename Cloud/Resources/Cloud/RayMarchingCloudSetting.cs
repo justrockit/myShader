@@ -7,7 +7,7 @@ namespace UnityEngine.Rendering.Universal
     public class RayMarchingCloudSetting : VolumeComponent, IPostProcessComponent
     {
 
-        public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingTransparents;
+       // public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingTransparents;
 
         public ColorParameter tint = new ColorParameter(Color.white, false, false, true);
       
@@ -22,8 +22,8 @@ namespace UnityEngine.Rendering.Universal
         //{
         //    if (material == null)
         //    {
-        //        //Ê¹ÓÃCoreUtils.CreateEngineMaterialÀ´´ÓShader´´½¨²ÄÖÊ
-        //        //CreateEngineMaterial£ºÊ¹ÓÃÌá¹©µÄ×ÅÉ«Æ÷Â·¾¶´´½¨²ÄÖÊ¡£hideFlags½«±»ÉèÖÃÎª HideFlags.HideAndDontSave¡£
+        //        //ä½¿ç”¨CoreUtils.CreateEngineMaterialæ¥ä»Shaderåˆ›å»ºæè´¨
+        //        //CreateEngineMaterialï¼šä½¿ç”¨æä¾›çš„ç€è‰²å™¨è·¯å¾„åˆ›å»ºæè´¨ã€‚hideFlagså°†è¢«è®¾ç½®ä¸º HideFlags.HideAndDontSaveã€‚
         //        material = CoreUtils.CreateEngineMaterial(shaderName);
         //    }
         //}
