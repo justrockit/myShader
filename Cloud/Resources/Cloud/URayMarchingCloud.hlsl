@@ -73,8 +73,16 @@ dstInsideBox：射线在长方体内部穿过的距离。
 */
  float2  RayMarchingBoundary(float3 minPos,float3 maxPos,float3 rayOrigin,float3 rayDir)
  {
-      float3 minDis=minPos-rayOrigin;
-      float3 maxDis=maxPos-rayOrigin;
-
+       //射线到两点的距离长度比较,得出远近
+      float3 minT=(minPos-rayOrigin)/rayDir;
+      float3 maxT=(maxPos-rayOrigin)/rayDir;
+      float3 frontT=min(minT,maxT);
+      float3 backT= max(minT,maxT);
+      //AABB 原理 frontT的最大值小于backT的最小值，则射线与盒子相交
+       float maxfront=max(frontT.x,max(frontT,y,frontT.z));//得到
+       float minback=min(backT.x,min(backT,y,backT.z));
+      float dstToBox=max(maxfront,0);//小于0说明在物体内发射
+      float dstInsideBox=max(0,minback-dstToBox);//minback-dstToBox 大于0说明在物体内部通过
+      return  float2(dstToBox,dstInsideBox);
  }
 
