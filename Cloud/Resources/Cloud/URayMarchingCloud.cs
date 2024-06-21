@@ -117,6 +117,10 @@ namespace UnityEngine.Rendering.Universal.Internal
             ref CameraData cameraData = ref renderingData.cameraData;
             ref ScriptableRenderer renderer = ref cameraData.renderer;
             material.SetColor("_BaseColor", baseColor);
+            material.SetVector("_Noise3DOffSet", m_rayMarchingCloudSetting.Noise3DOffSet.value);
+            material.SetVector("_Noise3DScale", m_rayMarchingCloudSetting.Noise3DScale.value);
+            material.SetTexture("_Noise3D", m_rayMarchingCloudSetting.Noise3D.value);
+
             m_Source = renderer.cameraColorTargetHandle;
             cmd.GetTemporaryRT(_RayMarchingCloud, GetCompatibleDescriptor(), FilterMode.Bilinear);
         //    destination = _RayMarchingCloud;

@@ -10,7 +10,12 @@ namespace UnityEngine.Rendering.Universal
        // public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingTransparents;
 
         public ColorParameter tint = new ColorParameter(Color.white, false, false, true);
-      
+
+        public Texture3DParameter Noise3D = new Texture3DParameter(null);
+
+        public Vector3Parameter Noise3DScale = new Vector3Parameter(Vector3.zero);
+
+        public Vector3Parameter Noise3DOffSet = new Vector3Parameter(Vector3.zero);
         /// <inheritdoc/>
         public bool IsActive() =>true;
 

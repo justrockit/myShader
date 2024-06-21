@@ -4,6 +4,11 @@
     {
         _BaseMap("MainTex", 2D) = "White" { }
         _BaseColor("BaseColor", Color) = (1.0, 1.0, 1.0, 1.0)
+
+        _Noise3DScale("Noise3DScale",Vector)=(1,1,1)
+        _Noise3DOffSet("Noise3DOffSet",Vector)=(0,0,0)
+        _Noise3D("Noise3D",3D)="White" { }
+
     }
 
     SubShader
@@ -25,19 +30,9 @@
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "URayMarchingCloud.hlsl"
             
-            // 将不占空间的材质相关变量放在CBUFFER中，为了兼容SRP Batcher
-            CBUFFER_START(UnityPerMaterial)
-                float4 _BaseMap_ST;
-                half4 _BaseColor;
-                 float4 _SourceTex_TexelSize;
-            CBUFFER_END
-
-            // 材质单独声明，使用DX11风格的新采样方法
-            TEXTURE2D (_BaseMap);
-            SAMPLER(sampler_BaseMap);
-
-            TEXTURE2D_X(_SourceTex);
-             SAMPLER(sampler_SourceTex);
+     
+     
+         //   sampler3D _Noise3D;
           
             struct Attributes
             {
@@ -65,7 +60,7 @@
                 // 声明顶点/片段着色器对应的函数
                 #pragma vertex vert
                 #pragma fragment frag
-
+          #pragma enable_d3d11_debug_symbols
 
                 // 顶点着色器
                 Varyings vert(Attributes input)
@@ -90,7 +85,8 @@
                       
                      //float3  RayDir=normalize( GetCameraPositionWS()- vPInput.positionWS);                  
                      half4  SourceColor= SAMPLE_TEXTURE2D_X(_SourceTex, sampler_SourceTex, input.uv);
-                     half raydata=   RayMarchingTest(_WorldSpaceCameraPos.xyz,rayDir);
+                     half raydata=   RayMarchingWithBoundary(float3(-10,-10,-10),float3(10,10,10),_WorldSpaceCameraPos.xyz,rayDir,worldPosition);
+                     
                      return SourceColor+raydata;
                 }
             
