@@ -11,6 +11,10 @@ half4 _BaseColor;
 float4 _SourceTex_TexelSize;
 float3 _Noise3DScale;
 float3 _Noise3DOffSet;
+float _Attenuation;//吸光率 越大越透
+float _LightPower;
+float _LightAttenuation;
+
 CBUFFER_END
 
 // 材质单独声明，使用DX11风格的新采样方法
@@ -125,6 +129,11 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
      return  density;
  }
 
+
+ #define lightStep 8
+
+ #define CameraStep 32
+ //带 摩尔消光，带3d噪声图,带射线步进aabb的云朵
  float RayMarchingWithBoundary(float3 minPos,float3 maxPos,float3 rayOrigin,float3 rayDir,float3 positionWS)
  {
     //先得到相机到障碍物的距离
@@ -134,7 +143,7 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
     float dstToBox=data.x;
     float dstInsideBox=data.y;
     //再得出真实计算云朵参数的长度,如果dstobj<dstToBox,说明完全被阻挡
-    float finalDst=max(0,min(dstInsideBox,dstobj-dstToBox));
+    float finalDst=min(dstInsideBox,dstobj-dstToBox);
     //开始计算
     //初始出发点，从矩形接触点开始
     float3 firstpoint=rayOrigin+dstToBox*rayDir;
@@ -161,42 +170,85 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
         curPos=curPos+steplengthvector;
         cursteplength=cursteplength+steplength;
     }
-     return  color;
+     return  exp(-_Attenuation*color);
+ }
 
+ //计算该点的云朵浓度，这个不用计算遮挡的影响，因为如果这个点被遮挡住，就不会有光照给相机计算
+//相机到点射线上的每个采样点都得算一遍，是个积分过程
+ float  RayMarchingLight(float3 position,float3 minPos,float3 maxPos)
+ {
+    //光照方向位置
+   float3 lightpos=_MainLightPosition.xyz;
+   //计算方向单位向量
+  // float3 rayDir=normalize(position-lightpos);
+   //计算距离参数
+   /*********** TODO:这里的给传入的方向反向了一下是因为，rayBoxDst的计算是要从目标点到体积，而采样时，则是反过来，从position出发到主光源*/
 
-
-
-//     float2 data=RayMarchingBoundary(minPos,maxPos,rayOrigin,rayDir);
-//     float dstToBox=data.x;
-//     float dstInsideBox=data.y;
-//         float3 worldPosition =positionWS;
-//     float3 rayPosition = _WorldSpaceCameraPos.xyz;
-//     float3 worldViewVector = worldPosition - rayPosition;
-// float dstToOpaque = length(worldViewVector);
-// int stepCount = 32;                                     // 总步数
-// float3 entryPoint = rayOrigin + rayDir * dstToBox;    // 采样起点
-// float stepSize = dstInsideBox / stepCount;              // 步长
-// float3 stepVec = stepSize * rayDir;                     // 步长 * 方向
-// float totalDensity = 0;                                 // 浓度积分
-// float dstTravelled = 0;                                 // 已经走过的距离
-// float3 currentPoint = entryPoint;                       // 当前点
-// float dstLimit = min(dstToOpaque - dstToBox, dstInsideBox);
-// for(int i = 0; i < stepCount; i ++){
-//     if(dstTravelled < dstLimit){
-//         totalDensity += stepSize * sampleDensity(currentPoint);
-//     }else{
-//         break;
-//     }
-//     currentPoint += stepVec;
-//     dstTravelled += stepSize;
-// }
-
-// return  dstTravelled;
-
+   float2 data=RayMarchingBoundary(minPos,maxPos,position,1/lightpos);
+   float dstToBox=data.x;
+   float dstInsideBox=data.y;
+   int stepnum=lightStep;//步数
+   float steplength=dstInsideBox/stepnum;
+   float3 steplengthvector=steplength*lightpos;
+   half totalDensity=0;
+   
+    for(int i=0;i<stepnum;i++)
+    {
+        totalDensity=totalDensity+steplength * max(0, sampleDensity(position));
+        position=position+steplengthvector;
+    }
+     return  totalDensity;
  }
 
 
+ //带 摩尔消光，带3d噪声图,带射线步进aabb 带光照计算的云朵
+float3 RayMarchingWithBoundaryWithLight(float3 minPos,float3 maxPos,float3 rayOrigin,float3 rayDir,float3 positionWS,float4 sourceColor)
+ {
+    //先得到相机到障碍物的距离
+    float dstobj=length(positionWS-rayOrigin);
+    //再得到相机到云朵最近距离 和 在云朵内部长度
+    float2 data=RayMarchingBoundary(minPos,maxPos,rayOrigin,rayDir);
+    float dstToBox=data.x;
+    float dstInsideBox=data.y;
+    //再得出真实计算云朵参数的长度,如果dstobj<dstToBox,说明完全被阻挡
+    float finalDst=min(dstInsideBox,dstobj-dstToBox);
+    //开始计算
+    //初始出发点，从矩形接触点开始
+    float3 firstpoint=rayOrigin+dstToBox*rayDir;
+    int stepnum=CameraStep;//步数
+    //步长=长度/步数
+    float steplength=dstInsideBox/stepnum;
+    float3 steplengthvector=steplength*rayDir;
 
+    half totalDensity=0;//相机到点的浓度
+    half totalLightDensity=0;//光照到每个点的浓度
 
+    //浓度 ,和步长关联上，这样不会因为步数造成稀薄
+    //half color2=0.1*steplength;
+    float3 curPos=firstpoint;
+    float cursteplength=0;
+    for(int i=0;i<stepnum;i++)
+    {
+        if(cursteplength<finalDst)
+        {  
+            half curDensity=  steplength * sampleDensity(curPos);//当前点浓度值 采样获得
+            totalDensity=totalDensity+curDensity;//浓度值累加
+            half LightDensity=RayMarchingLight(curPos,minPos,maxPos);//当前点到光照距离上的浓度和
+            totalLightDensity=totalLightDensity+exp(- (LightDensity*_LightAttenuation+totalDensity*_Attenuation))*curDensity;//每个点到光照距离上的浓度和累加（光纤到点衰减一次，点到相机再一次）
+             curPos=curPos+steplengthvector;
+              cursteplength=cursteplength+steplength;
+            continue;
+        }
+         break;
+       
+    }
+
+    //现在拥有了光照的衰减系数
+    //可以把光照到相机的颜色计算出来
+    float3 cloudcolor= _MainLightColor*totalLightDensity*_BaseColor.xyz*_LightPower;
+     float3  albedo=sourceColor.xyz*exp(-_Attenuation*totalDensity)+cloudcolor;
+
+     return albedo  ;
+ }
  
 

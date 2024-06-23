@@ -59,13 +59,14 @@ namespace UnityEngine.Rendering.Universal.Internal
     {
         const string m_ProfilerTag = "RayMarchingCloud(射线步进体积云)";
         RTHandle m_Source;
-        RTHandle destination= RTHandles.Alloc(_RayMarchingCloud);
+       
         Color baseColor;
         Material m_BlitMaterial;
         TextureDimension m_TargetDimension;
         RenderTextureDescriptor m_Descriptor;
         RayMarchingCloudSetting m_rayMarchingCloudSetting;
         public static readonly int _RayMarchingCloud = Shader.PropertyToID("_RayMarchingCloud");
+        RTHandle destination ;
         public URayMarchingCloudPass(RenderPassEvent evt)
 
         {
@@ -82,8 +83,8 @@ namespace UnityEngine.Rendering.Universal.Internal
         public void Setup(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle, Material BlitMaterial)
         {
            // m_Source = colorHandle;
-            if (m_Source?.nameID != colorHandle.Identifier())
-                m_Source = RTHandles.Alloc(colorHandle.Identifier());
+            //if (m_Source?.nameID != colorHandle.Identifier())
+            //    m_Source = RTHandles.Alloc(colorHandle.Identifier());
 
             //if (destination?.nameID != _destination.Identifier())
             //    destination = RTHandles.Alloc(_destination.Identifier());
@@ -120,13 +121,24 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetVector("_Noise3DOffSet", m_rayMarchingCloudSetting.Noise3DOffSet.value);
             material.SetVector("_Noise3DScale", m_rayMarchingCloudSetting.Noise3DScale.value);
             material.SetTexture("_Noise3D", m_rayMarchingCloudSetting.Noise3D.value);
-
+            material.SetFloat("_Attenuation", m_rayMarchingCloudSetting.Attenuation.value);
+            material.SetFloat("_LightPower", m_rayMarchingCloudSetting.LightPower.value);
+            material.SetFloat("_LightAttenuation", m_rayMarchingCloudSetting.LightAttenuation.value);
+            
             m_Source = renderer.cameraColorTargetHandle;
-            cmd.GetTemporaryRT(_RayMarchingCloud, GetCompatibleDescriptor(), FilterMode.Bilinear);
-        //    destination = _RayMarchingCloud;
-            Blitter.BlitCameraTexture(cmd, m_Source, destination, material,0);
+            //  cmd.GetTemporaryRT(_RayMarchingCloud, GetCompatibleDescriptor(), FilterMode.Bilinear);
+           // destination= renderer.GetCameraColorFrontBuffer(cmd)
+                if (destination == null)
+            {
+                RenderingUtils.ReAllocateIfNeeded(ref destination, GetCompatibleDescriptor(), FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_TempTarget");
+         
+            }
+            material.SetTexture("_SourceTex", m_Source);
+            //Blitter.BlitCameraTexture(cmd, m_Source, destination, material,0);
+            cmd.Blit(m_Source.nameID ,destination.nameID, material, 0);
             //Blitter.BlitCameraTexture(cmd, destination, m_Source, material, 0);
-           cmd.Blit(destination.nameID, m_Source.nameID, material, 0);
+           
+            cmd.Blit(destination.nameID, m_Source.nameID, material, 0);
         }
 
         // 相机初始化时执行

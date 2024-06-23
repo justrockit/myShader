@@ -16,6 +16,15 @@ namespace UnityEngine.Rendering.Universal
         public Vector3Parameter Noise3DScale = new Vector3Parameter(Vector3.zero);
 
         public Vector3Parameter Noise3DOffSet = new Vector3Parameter(Vector3.zero);
+
+        //摩尔消光的衰减系数
+        public FloatParameter Attenuation = new FloatParameter(1);
+
+        //光照造成的颜色强度
+        public FloatParameter LightPower = new FloatParameter(1);
+
+        //光照路径上的摩尔消光的衰减系数
+        public FloatParameter LightAttenuation = new FloatParameter(1);
         /// <inheritdoc/>
         public bool IsActive() =>true;
 

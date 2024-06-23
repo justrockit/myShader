@@ -39,10 +39,10 @@ public  class Worley:EditorWindow
     new Vector3Int(1, -1, -1),
 };
 
-   public static string path = "Assets/MyShader/myShader/third/Noise/";
-    public static Vector3Int shape=new Vector3Int(100,100,100);
+   public static string path = "Assets/myShader/third/Noise/";
+    public static Vector3Int shape=new Vector3Int(10,10,10);
 
-    public static int cellsize=1;
+    public static int cellsize=10;
     [MenuItem("Tools/Worley3d噪声")]
     private static void generate()
     {
