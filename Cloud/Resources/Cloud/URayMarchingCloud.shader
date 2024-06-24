@@ -103,7 +103,7 @@ Shader "Fsy/PP/Cloud"
                     float3 rayDir = normalize(worldPosition - _WorldSpaceCameraPos.xyz);
                     VertexPositionInputs vPInput=GetVertexPositionInputs(input.positionOS);      
                     half4  SourceColor= SAMPLE_TEXTURE2D_X(_SourceTex, sampler_SourceTex, input.uv);
-                    half3 finalcolor=   RayMarchingWithBoundaryWithLightMoreCorrect(_WorldSpaceCameraPos.xyz,rayDir,worldPosition,SourceColor);
+                    half3 finalcolor=   RayMarchingWithBoundaryWithLightMoreMoreCorrect(_WorldSpaceCameraPos.xyz,rayDir,worldPosition,SourceColor);
                     return half4(finalcolor,1);
                     //endregion
                 }

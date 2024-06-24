@@ -41,17 +41,46 @@ public  class Worley:EditorWindow
 
    public static string path = "Assets/myShader/third/Noise/";
     public static Vector3Int shape=new Vector3Int(10,10,10);
-
     public static int cellsize=10;
+
     [MenuItem("Tools/Worley3d噪声")]
     private static void generate()
     {
-        generate(shape, cellsize);
+        Texture3D output= generate(shape, cellsize);
+        output.Apply();
+        // Save the texture to your Unity Project
+        AssetDatabase.CreateAsset(output, path + "testtexture3d.asset");
     }
 
 
+    [MenuItem("Tools/Worley3d 分形噪声")]
+    private static void generate2()
+    {
+        Texture3D output = generate(new Vector3Int(10, 10, 10), 10);
+        Texture3D output1 = generate(new Vector3Int(20, 20, 20), 5);
+        Texture3D output2 = generate(new Vector3Int(50, 50, 50), 2);
+        Vector3Int size = new Vector3Int(100, 100, 100);
+        Texture3D outputnew = new Texture3D(size.x, size.y, size.y, TextureFormat.RGB24, false);
+        for (int x = 0; x < 100; x++)
+        {
+            for (int y = 0; y < 100; y++)
+            {
+                for (int z = 0; z < 100; z++)
+                {
+                    Color c = output.GetPixel(x, y, z) + output1.GetPixel(x, y, z) + output2.GetPixel(x, y, z);
+                    outputnew.SetPixel(x,y,z, c/3);
+                }
+            }
+        }
 
-    private static void generate(Vector3Int shape, int cellsize)
+
+        outputnew.Apply();
+        // Save the texture to your Unity Project
+        AssetDatabase.CreateAsset(outputnew, path + "testtexture3dnew.asset");
+    }
+
+
+    private static Texture3D generate(Vector3Int shape, int cellsize)
     {
 
         Vector3Int size = shape * cellsize;
@@ -85,10 +114,7 @@ public  class Worley:EditorWindow
             }
         }
 
-        output.Apply();
-
-        // Save the texture to your Unity Project
-        AssetDatabase.CreateAsset(output, path+ "testtexture3d.asset");
+        return output;
 
     }
     public static float minDst(Vector3 pos, Vector3[] buf)

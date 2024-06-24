@@ -123,6 +123,11 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetVector("_Noise3DOffSet", m_rayMarchingCloudSetting.Noise3DOffSet.value);
             material.SetVector("_Noise3DScale", m_rayMarchingCloudSetting.Noise3DScale.value);
             material.SetTexture("_Noise3D", m_rayMarchingCloudSetting.Noise3D.value);
+
+            material.SetTexture("_FractalNoise3D", m_rayMarchingCloudSetting.FractalNoise3D.value);
+            material.SetVector("_FractalNoise3DOffSet", m_rayMarchingCloudSetting.FractalNoise3DOffSet.value);
+            material.SetVector("_FractalNoise3DScale", m_rayMarchingCloudSetting.FractalNoise3DScale.value);
+
             material.SetFloat("_Attenuation", m_rayMarchingCloudSetting.Attenuation.value);
             material.SetFloat("_LightPower", m_rayMarchingCloudSetting.LightPower.value);
             material.SetFloat("_LightAttenuation", m_rayMarchingCloudSetting.LightAttenuation.value);

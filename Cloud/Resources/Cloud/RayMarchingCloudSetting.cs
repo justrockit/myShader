@@ -17,9 +17,16 @@ namespace UnityEngine.Rendering.Universal
 
         public Texture3DParameter Noise3D = new Texture3DParameter(null);
 
+   
         public Vector3Parameter Noise3DScale = new Vector3Parameter(Vector3.zero);
 
         public Vector3Parameter Noise3DOffSet = new Vector3Parameter(Vector3.zero);
+
+        public Texture3DParameter FractalNoise3D = new Texture3DParameter(null);
+
+        public Vector3Parameter FractalNoise3DScale = new Vector3Parameter(Vector3.zero);
+
+        public Vector3Parameter FractalNoise3DOffSet = new Vector3Parameter(Vector3.zero);
 
         //摩尔消光的衰减系数
         public FloatParameter Attenuation = new FloatParameter(1);

@@ -13,6 +13,9 @@ float3 _BoundMin;
 float3 _BoundMax;
 float3 _Noise3DScale;//噪声图缩放比
 float3 _Noise3DOffSet;//噪声图偏移值
+float3 _FractalNoise3DScale;//分形噪声图缩放比
+float3 _FractalNoise3DOffSet;//分形噪声图偏移值
+
 float _Attenuation;//摩尔消光系数 越大越透
 float _LightPower;//光照散射强度控制参数
 float _LightAttenuation;//光照的摩尔消光系数 越大越透
@@ -27,7 +30,7 @@ SAMPLER(sampler_BaseMap);
 TEXTURE2D_X(_SourceTex);
 SAMPLER(sampler_SourceTex);
 sampler3D _Noise3D;
-
+sampler3D _FractalNoise3D;//分形噪声，优化云朵边缘
 //计算采样各地点深度值得到改点的世界坐标
 
 /*
@@ -351,8 +354,20 @@ float3 BeerPowder(float3 d, float a)
     return exp(-d * a) * (1 - exp(-d* 2 * a));
 }
 
+ float sampleDensityWithFractalNoise(float3 position)
+ {
+     float3 realpos=position*_Noise3DScale+_Noise3DOffSet;
+     float  density=tex3D(_Noise3D,realpos).r;
 
-  //第四步
+     float3 realpos2=position*_FractalNoise3DScale+_FractalNoise3DOffSet;
+     float  density2=tex3D(_FractalNoise3D,realpos2).r;
+
+     return  max(0,density-density2) ;
+ }
+
+
+
+  //第五步
  //带 摩尔消光，带3d噪声图,带射线步进aabb 带光照计算 带透射比 带相位函数 带 Beers Powder Function  的云朵
 float3 RayMarchingWithBoundaryWithLightMoreMoreCorrect(float3 rayOrigin,float3 rayDir,float3 positionWS,float4 sourceColor)
  {
@@ -399,10 +414,18 @@ float HgPhaseValue = lerp(
     {
         if(cursteplength<finalDst)
         {  
-            half curDensity=  steplength * sampleDensity(curPos);//当前点浓度值 采样获得
+            half curDensity=  steplength * sampleDensityWithFractalNoise(curPos);//当前点浓度值 采样获得
             totalDensity=totalDensity+curDensity;//浓度值累加
             half LightDensity=RayMarchingLight(curPos,minPos,maxPos);//当前点到光照距离上的浓度和
-            totalLightDensity=totalLightDensity+exp(- (LightDensity*_LightAttenuation+totalDensity*_Attenuation)*_Transmissivity )*_Transmissivity*curDensity*HgPhaseValue;//每个点到光照距离上的浓度和累加（光纤到点衰减一次，点到相机再一次）
+            //对光照的浓度累计计算和云朵自己颜色的浓度累加计算分开，因为需要用BeerPowder取代光照的比尔朗博定律公式
+            //totalLightDensity=totalLightDensity+exp(- (LightDensity*_LightAttenuation+totalDensity*_Attenuation)*_Transmissivity )*_Transmissivity*curDensity*HgPhaseValue;//每个点到光照距离上的浓度和累加（光纤到点衰减一次，点到相机再一次）
+            //curPos=curPos+steplengthvector;
+           // cursteplength=cursteplength+steplength;
+            //end
+           //每个点到光照距离上的浓度和累加（光纤到点衰减一次，点到相机再一次）
+            half totalDensityPart= exp(-totalDensity*_Attenuation);
+            half3  totalLightDensityPart=BeerPowder(LightDensity*_LightAttenuation*_Transmissivity,6)*_Transmissivity*curDensity*HgPhaseValue;
+            totalLightDensity=totalLightDensity+totalLightDensityPart*totalDensityPart;
             curPos=curPos+steplengthvector;
             cursteplength=cursteplength+steplength;
             continue;
@@ -415,7 +438,6 @@ float HgPhaseValue = lerp(
     //可以把光照到相机的颜色计算出来
      float3 cloudcolor= _MainLightColor*totalLightDensity*_BaseColor.xyz*_LightPower;
      float3  albedo=sourceColor.xyz*exp(-_Attenuation*totalDensity)+cloudcolor;
-
      return albedo  ;
  }
  
