@@ -88,13 +88,24 @@ Shader "Fsy/PP/Cloud"
                    //  half raydata=   RayMarchingWithBoundary(float3(-10,-10,-10),float3(10,10,10),_WorldSpaceCameraPos.xyz,rayDir,worldPosition);
                    // return SourceColor*raydata;
                     //endregion
-                    float3 worldPosition = GetWorldPosition(input.positionCS);//用深度图获得世界坐标
-                   float3 rayDir = normalize(worldPosition - _WorldSpaceCameraPos.xyz);
-                   VertexPositionInputs vPInput=GetVertexPositionInputs(input.positionOS);      
-                    half4  SourceColor= SAMPLE_TEXTURE2D_X(_SourceTex, sampler_SourceTex, input.uv);
-                     half3 finalcolor=   RayMarchingWithBoundaryWithLight(float3(-10,-10,-10),float3(10,10,10),_WorldSpaceCameraPos.xyz,rayDir,worldPosition,SourceColor);
+                     //region 这段计算RayMarchingWithBoundary 有光照用
+                  //  float3 worldPosition = GetWorldPosition(input.positionCS);//用深度图获得世界坐标
+                 //   float3 rayDir = normalize(worldPosition - _WorldSpaceCameraPos.xyz);
+                   // VertexPositionInputs vPInput=GetVertexPositionInputs(input.positionOS);      
+                   // half4  SourceColor= SAMPLE_TEXTURE2D_X(_SourceTex, sampler_SourceTex, input.uv);
+                    //half3 finalcolor=   RayMarchingWithBoundaryWithLight(float3(-10,-10,-10),float3(10,10,10),_WorldSpaceCameraPos.xyz,rayDir,worldPosition,SourceColor);
+                  //  return half4(finalcolor,1);
+                    //endregion
 
-                     return half4(finalcolor,1);
+
+                    //region 这段计算RayMarchingWithBoundary  有光照 相位函数 用
+                    float3 worldPosition = GetWorldPosition(input.positionCS);//用深度图获得世界坐标
+                    float3 rayDir = normalize(worldPosition - _WorldSpaceCameraPos.xyz);
+                    VertexPositionInputs vPInput=GetVertexPositionInputs(input.positionOS);      
+                    half4  SourceColor= SAMPLE_TEXTURE2D_X(_SourceTex, sampler_SourceTex, input.uv);
+                    half3 finalcolor=   RayMarchingWithBoundaryWithLightMoreCorrect(_WorldSpaceCameraPos.xyz,rayDir,worldPosition,SourceColor);
+                    return half4(finalcolor,1);
+                    //endregion
                 }
             
             ENDHLSL

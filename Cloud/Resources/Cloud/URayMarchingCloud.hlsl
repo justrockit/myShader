@@ -9,12 +9,15 @@ CBUFFER_START(UnityPerMaterial)
 float4 _BaseMap_ST;
 half4 _BaseColor;
 float4 _SourceTex_TexelSize;
-float3 _Noise3DScale;
-float3 _Noise3DOffSet;
-float _Attenuation;//吸光率 越大越透
-float _LightPower;
-float _LightAttenuation;
-
+float3 _BoundMin;
+float3 _BoundMax;
+float3 _Noise3DScale;//噪声图缩放比
+float3 _Noise3DOffSet;//噪声图偏移值
+float _Attenuation;//摩尔消光系数 越大越透
+float _LightPower;//光照散射强度控制参数
+float _LightAttenuation;//光照的摩尔消光系数 越大越透
+float3 _Transmissivity;//透射比 控制RGB波长对透射影响的不同
+float3 _HgPhase;//相位函数 常量参数 用来描述云雾得性质，为0时代表各向同性
 CBUFFER_END
 
 // 材质单独声明，使用DX11风格的新采样方法
@@ -24,7 +27,6 @@ SAMPLER(sampler_BaseMap);
 TEXTURE2D_X(_SourceTex);
 SAMPLER(sampler_SourceTex);
 sampler3D _Noise3D;
-
 
 //计算采样各地点深度值得到改点的世界坐标
 
@@ -59,6 +61,7 @@ float3 GetWorldPosition(float3 positionCS)
     return  worldpos.xyz;
  }
 
+ //第一步
  //射线步进的测试代码 从相机位置往计算出来的点按步数前进
 half RayMarchingTest(float3 orgin,float3 RayDir )
  {
@@ -102,8 +105,8 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
 投影到射线方向：将上述计算得到的方向向量除以射线方向向量 rayDir，即 (minPos - rayOrigin) / rayDir，这个过程实际上是计算了从射线原点到边界框最小顶点的向量在射线方向上的投影长度（或者说，是在射线方向上的“距离”或“参数值”）。这个投影长度（或参数值）可以告诉我们沿着射线方向前进多远会首次接触到边界框。
 如果 rayDir 是一个单位向量（即长度为1的向量），那么这个投影长度就直接是射线原点到边界框最小顶点的距离在射线方向上的分量。如果 rayDir 不是单位向量，那么结果将是这个距离与 rayDir 长度的比值，但无论如何，它都表示了沿着射线方向前进多远会首次接触到边界框。
 在射线追踪、光线投射等图形学应用中，这种计算方式非常常见，因为它允许我们快速地确定射线与场景中物体的相交情况，从而决定如何渲染场景中的物体。
-
 */
+
 //TODO 模棱两可
  float2  RayMarchingBoundary(float3 minPos,float3 maxPos,float3 rayOrigin,float3 rayDir)
  {
@@ -133,6 +136,8 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
  #define lightStep 8
 
  #define CameraStep 32
+
+ //第二步
  //带 摩尔消光，带3d噪声图,带射线步进aabb的云朵
  float RayMarchingWithBoundary(float3 minPos,float3 maxPos,float3 rayOrigin,float3 rayDir,float3 positionWS)
  {
@@ -173,6 +178,8 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
      return  exp(-_Attenuation*color);
  }
 
+
+
  //计算该点的云朵浓度，这个不用计算遮挡的影响，因为如果这个点被遮挡住，就不会有光照给相机计算
 //相机到点射线上的每个采样点都得算一遍，是个积分过程
  float  RayMarchingLight(float3 position,float3 minPos,float3 maxPos)
@@ -200,7 +207,7 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
      return  totalDensity;
  }
 
-
+//第三步
  //带 摩尔消光，带3d噪声图,带射线步进aabb 带光照计算的云朵
 float3 RayMarchingWithBoundaryWithLight(float3 minPos,float3 maxPos,float3 rayOrigin,float3 rayDir,float3 positionWS,float4 sourceColor)
  {
@@ -246,6 +253,167 @@ float3 RayMarchingWithBoundaryWithLight(float3 minPos,float3 maxPos,float3 rayOr
     //现在拥有了光照的衰减系数
     //可以把光照到相机的颜色计算出来
     float3 cloudcolor= _MainLightColor*totalLightDensity*_BaseColor.xyz*_LightPower;
+     float3  albedo=sourceColor.xyz*exp(-_Attenuation*totalDensity)+cloudcolor;
+
+     return albedo  ;
+ }
+
+
+ //施利克相位函数 模拟米氏散射
+float SchlickFunction(float costha,float g)
+{
+  float k=1.55*g-0.53*g*g*g;
+  return (1-k*k)/(4*PI*(1-k*costha)*(1-k*costha));
+
+}
+//亨利格林斯坦函数 模拟米氏散射
+float HgPhaseFunction(float costha,float g)
+{
+    float g2 = g * g;
+    return (1 - g2)/(4*PI * pow(1 + g2 - 2 * g * costha, 1.5));
+}
+
+
+
+
+ //第四步
+ //带 摩尔消光，带3d噪声图,带射线步进aabb 带光照计算 带透射比 带相位函数  的云朵
+float3 RayMarchingWithBoundaryWithLightMoreCorrect(float3 rayOrigin,float3 rayDir,float3 positionWS,float4 sourceColor)
+ {
+
+    float3 minPos=_BoundMin;
+    float3 maxPos=_BoundMax;
+
+    //先得到相机到障碍物的距离
+    float dstobj=length(positionWS-rayOrigin);
+    //再得到相机到云朵最近距离 和 在云朵内部长度
+    float2 data=RayMarchingBoundary(minPos,maxPos,rayOrigin,rayDir);
+    float dstToBox=data.x;
+    float dstInsideBox=data.y;
+    //再得出真实计算云朵参数的长度,如果dstobj<dstToBox,说明完全被阻挡
+    float finalDst=min(dstInsideBox,dstobj-dstToBox);
+    //开始计算
+    //初始出发点，从矩形接触点开始
+    float3 firstpoint=rayOrigin+dstToBox*rayDir;
+    int stepnum=CameraStep;//步数
+    //步长=长度/步数
+    float steplength=dstInsideBox/stepnum;
+    float3 steplengthvector=steplength*rayDir;
+
+    half totalDensity=0;//相机到点的浓度
+    half3 totalLightDensity= half3(0,0,0);//光照到每个点的浓度
+
+    //浓度 ,和步长关联上，这样不会因为步数造成稀薄
+    //half color2=0.1*steplength;
+    float3 curPos=firstpoint;
+    float cursteplength=0;
+
+
+    /* 基于亨利·格林斯坦相位函数模拟米氏散射，这个函数可以在循环外侧计算 */
+//   float costha=dot(rayDir,_MainLightPosition.xyz);
+  // float  HgPhaseValue=HgPhaseFunction(costha,_HgPhase.x);
+     
+/* 双瓣相位函数  基于两个亨利·格林斯坦相位函数插值模拟米氏散射   */
+float _costheta = dot(rayDir, _MainLightPosition.xyz);
+float HgPhaseValue = lerp(
+    HgPhaseFunction(_costheta, _HgPhase.x), 
+    HgPhaseFunction(_costheta, _HgPhase.y), 
+    _HgPhase.z
+);
+    for(int i=0;i<stepnum;i++)
+    {
+        if(cursteplength<finalDst)
+        {  
+            half curDensity=  steplength * sampleDensity(curPos);//当前点浓度值 采样获得
+            totalDensity=totalDensity+curDensity;//浓度值累加
+            half LightDensity=RayMarchingLight(curPos,minPos,maxPos);//当前点到光照距离上的浓度和
+            totalLightDensity=totalLightDensity+exp(- (LightDensity*_LightAttenuation+totalDensity*_Attenuation)*_Transmissivity )*_Transmissivity*curDensity*HgPhaseValue;//每个点到光照距离上的浓度和累加（光纤到点衰减一次，点到相机再一次）
+            curPos=curPos+steplengthvector;
+            cursteplength=cursteplength+steplength;
+            continue;
+        }
+         break;
+       
+    }
+
+    //现在拥有了光照的衰减系数
+    //可以把光照到相机的颜色计算出来
+     float3 cloudcolor= _MainLightColor*totalLightDensity*_BaseColor.xyz*_LightPower;
+     float3  albedo=sourceColor.xyz*exp(-_Attenuation*totalDensity)+cloudcolor;
+
+     return albedo  ;
+ }
+ 
+
+//Beers Powder Function 比 比尔朗博定律的 exp(-a*d)来的更为真实   a：摩尔消光系数 d 浓度
+float3 BeerPowder(float3 d, float a)
+{
+    return exp(-d * a) * (1 - exp(-d* 2 * a));
+}
+
+
+  //第四步
+ //带 摩尔消光，带3d噪声图,带射线步进aabb 带光照计算 带透射比 带相位函数 带 Beers Powder Function  的云朵
+float3 RayMarchingWithBoundaryWithLightMoreMoreCorrect(float3 rayOrigin,float3 rayDir,float3 positionWS,float4 sourceColor)
+ {
+
+    float3 minPos=_BoundMin;
+    float3 maxPos=_BoundMax;
+    //先得到相机到障碍物的距离
+    float dstobj=length(positionWS-rayOrigin);
+    //再得到相机到云朵最近距离 和 在云朵内部长度
+    float2 data=RayMarchingBoundary(minPos,maxPos,rayOrigin,rayDir);
+    float dstToBox=data.x;
+    float dstInsideBox=data.y;
+    //再得出真实计算云朵参数的长度,如果dstobj<dstToBox,说明完全被阻挡
+    float finalDst=min(dstInsideBox,dstobj-dstToBox);
+    //开始计算
+    //初始出发点，从矩形接触点开始
+    float3 firstpoint=rayOrigin+dstToBox*rayDir;
+    int stepnum=CameraStep;//步数
+    //步长=长度/步数
+    float steplength=dstInsideBox/stepnum;
+    float3 steplengthvector=steplength*rayDir;
+
+    half totalDensity=0;//相机到点的浓度
+    half3 totalLightDensity= half3(0,0,0);//光照到每个点的浓度
+
+    //浓度 ,和步长关联上，这样不会因为步数造成稀薄
+    //half color2=0.1*steplength;
+    float3 curPos=firstpoint;
+    float cursteplength=0;
+
+
+    /* 基于亨利·格林斯坦相位函数模拟米氏散射，这个函数可以在循环外侧计算 */
+//   float costha=dot(rayDir,_MainLightPosition.xyz);
+  // float  HgPhaseValue=HgPhaseFunction(costha,_HgPhase.x);
+     
+/* 双瓣相位函数  基于两个亨利·格林斯坦相位函数插值模拟米氏散射   */
+float _costheta = dot(rayDir, _MainLightPosition.xyz);
+float HgPhaseValue = lerp(
+    HgPhaseFunction(_costheta, _HgPhase.x), 
+    HgPhaseFunction(_costheta, _HgPhase.y), 
+    _HgPhase.z
+);
+    for(int i=0;i<stepnum;i++)
+    {
+        if(cursteplength<finalDst)
+        {  
+            half curDensity=  steplength * sampleDensity(curPos);//当前点浓度值 采样获得
+            totalDensity=totalDensity+curDensity;//浓度值累加
+            half LightDensity=RayMarchingLight(curPos,minPos,maxPos);//当前点到光照距离上的浓度和
+            totalLightDensity=totalLightDensity+exp(- (LightDensity*_LightAttenuation+totalDensity*_Attenuation)*_Transmissivity )*_Transmissivity*curDensity*HgPhaseValue;//每个点到光照距离上的浓度和累加（光纤到点衰减一次，点到相机再一次）
+            curPos=curPos+steplengthvector;
+            cursteplength=cursteplength+steplength;
+            continue;
+        }
+         break;
+       
+    }
+
+    //现在拥有了光照的衰减系数
+    //可以把光照到相机的颜色计算出来
+     float3 cloudcolor= _MainLightColor*totalLightDensity*_BaseColor.xyz*_LightPower;
      float3  albedo=sourceColor.xyz*exp(-_Attenuation*totalDensity)+cloudcolor;
 
      return albedo  ;

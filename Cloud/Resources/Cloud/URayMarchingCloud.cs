@@ -118,13 +118,18 @@ namespace UnityEngine.Rendering.Universal.Internal
             ref CameraData cameraData = ref renderingData.cameraData;
             ref ScriptableRenderer renderer = ref cameraData.renderer;
             material.SetColor("_BaseColor", baseColor);
+            material.SetVector("_BoundMin", m_rayMarchingCloudSetting.BoundMin.value);
+            material.SetVector("_BoundMax", m_rayMarchingCloudSetting.BoundMax.value);
             material.SetVector("_Noise3DOffSet", m_rayMarchingCloudSetting.Noise3DOffSet.value);
             material.SetVector("_Noise3DScale", m_rayMarchingCloudSetting.Noise3DScale.value);
             material.SetTexture("_Noise3D", m_rayMarchingCloudSetting.Noise3D.value);
             material.SetFloat("_Attenuation", m_rayMarchingCloudSetting.Attenuation.value);
             material.SetFloat("_LightPower", m_rayMarchingCloudSetting.LightPower.value);
             material.SetFloat("_LightAttenuation", m_rayMarchingCloudSetting.LightAttenuation.value);
+            material.SetVector("_Transmissivity", m_rayMarchingCloudSetting.Sigma.value);
+            material.SetVector("_HgPhase",  m_rayMarchingCloudSetting.HgPhase.value);
             
+
             m_Source = renderer.cameraColorTargetHandle;
             //  cmd.GetTemporaryRT(_RayMarchingCloud, GetCompatibleDescriptor(), FilterMode.Bilinear);
            // destination= renderer.GetCameraColorFrontBuffer(cmd)
