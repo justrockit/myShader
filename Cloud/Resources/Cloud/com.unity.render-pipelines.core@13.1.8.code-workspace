@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "../../../../../../Library/PackageCache/com.unity.render-pipelines.core@13.1.8"
+		},
+		{
+			"path": "../../../../../../Library/PackageCache/com.unity.render-pipelines.universal@13.1.8"
+		},
+		{
+			"path": "../../.."
+		}
+	],
+	"settings": {
+		"editor.semanticTokenColorCustomizations": {},
+		"editor.tokenColorCustomizations": {
+			"comments": "#4C7901", // 注释
+		},
+	}
+}
