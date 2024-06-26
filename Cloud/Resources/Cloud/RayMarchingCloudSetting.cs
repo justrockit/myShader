@@ -25,6 +25,11 @@ namespace UnityEngine.Rendering.Universal
         [Tooltip("云朵AABB盒  最大点")]
         public Vector3Parameter BoundMax = new Vector3Parameter(Vector3.one);
 
+        [Tooltip("云朵的整体边缘衰减控制系数")]
+        public Vector3Parameter EdgeSoftnessThreshold = new Vector3Parameter(Vector3.one);
+
+
+        
         [Header("云朵颜色控制")]
 
         [Tooltip("云朵基础色")]

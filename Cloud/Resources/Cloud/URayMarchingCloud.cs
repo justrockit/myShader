@@ -128,7 +128,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetVector("_FractalNoise3DOffSet", m_rayMarchingCloudSetting.FractalNoise3DOffSet.value);
             material.SetVector("_FractalNoise3DScale", m_rayMarchingCloudSetting.FractalNoise3DScale.value/100);
             material.SetFloat("_DensityScale", m_rayMarchingCloudSetting.DensityScale.value);
- 
+            material.SetVector("_EdgeSoftnessThreshold", m_rayMarchingCloudSetting.EdgeSoftnessThreshold.value);
 
             material.SetFloat("_Attenuation", m_rayMarchingCloudSetting.Attenuation.value);
             material.SetFloat("_LightPower", m_rayMarchingCloudSetting.LightPower.value);

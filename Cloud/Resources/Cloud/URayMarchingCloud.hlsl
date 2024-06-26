@@ -22,6 +22,7 @@ float _LightAttenuation;//光照的摩尔消光系数 越大越透
 float3 _Transmissivity;//透射比 控制RGB波长对透射影响的不同
 float3 _HgPhase;//相位函数 常量参数 用来描述云雾得性质，为0时代表各向同性
 float3 _MainLight;
+float3 _EdgeSoftnessThreshold;
 CBUFFER_END
 
 // 材质单独声明，使用DX11风格的新采样方法
@@ -209,8 +210,8 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
   float2  RayMarchingBoundaryWithInside(float3 minPos,float3 maxPos,half3 rayOrigin,half3 rayDir)
  {
        //射线到两点的距离向量投影到单位方向向量上比较,得出远近
-      float3 minT=(minPos-rayOrigin)/rayDir;
-      float3 maxT=(maxPos-rayOrigin)/rayDir;
+      float3 minT=(minPos-rayOrigin)*rayDir;
+      float3 maxT=(maxPos-rayOrigin)*rayDir;
       float3 frontT=min(minT,maxT);
       float3 backT= max(minT,maxT);
       //AABB 原理 frontT的最大值小于backT的最小值，则射线与盒子相交
@@ -415,8 +416,12 @@ float3 BeerPowder(float3 d, float a)
 
      float3 realpos2=position*_FractalNoise3DScale+_FractalNoise3DOffSet;
      float  density2=tex3D(_FractalNoise3D,realpos2).r;
-
-     return  max(0,density-density2)*_DensityScale ;
+/* 范围盒边缘衰减 */
+     float x_dis=min(_EdgeSoftnessThreshold.x, min(position.x - _BoundMin.x, _BoundMax.x - position.x));
+     float y_dis=min(_EdgeSoftnessThreshold.y, min(position.y - _BoundMin.y, _BoundMax.y - position.y));
+     float z_dis=min(_EdgeSoftnessThreshold.z, min(position.z - _BoundMin.z, _BoundMax.z - position.z));
+      float softness=(x_dis/_EdgeSoftnessThreshold.x)*(y_dis/_EdgeSoftnessThreshold.y)*(z_dis/_EdgeSoftnessThreshold.z) ;
+     return  max(0,density-density2)*_DensityScale*softness*softness ;
  }
 
 
@@ -477,11 +482,18 @@ float HgPhaseValue = lerp(
            //每个点到光照距离上的浓度和累加（光纤到点衰减一次，点到相机再一次）
             float3 beervalue=  exp(-LightDensity*_LightAttenuation*_Transmissivity);
             float3  energy =beervalue*_Transmissivity*curDensity*HgPhaseValue;
-            totalLightDensity+=energy *totalBeerDensity;
-            
-            totalBeerDensity*= exp(-curDensity*_Attenuation);
-      
+        
+           
+            //https://www.ea.com/frostbite/news/physically-based-sky-atmosphere-and-cloud-rendering
+            //加入多次散射衰减
+              float3 attenuation=_LightAttenuation*_Transmissivity;
+              energy=(energy-energy*exp(-attenuation*LightDensity))/attenuation;
 
+
+
+
+            totalLightDensity+=energy *totalBeerDensity;
+            totalBeerDensity*= exp(-curDensity*_Attenuation);
             curPos+=steplengthvector;
             cursteplength+=steplength;
             continue;
