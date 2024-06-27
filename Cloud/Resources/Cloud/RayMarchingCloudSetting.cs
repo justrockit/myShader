@@ -1,5 +1,6 @@
 
 using System;
+using static UnityEngine.Rendering.Universal.Internal.URayMarchingCloud;
 namespace UnityEngine.Rendering.Universal
 {
 
@@ -28,8 +29,12 @@ namespace UnityEngine.Rendering.Universal
         [Tooltip("云朵的整体边缘衰减控制系数")]
         public Vector3Parameter EdgeSoftnessThreshold = new Vector3Parameter(Vector3.one);
 
+        [Tooltip("云朵的移动速度")]
+        public Vector3Parameter MoveSpeed = new Vector3Parameter(Vector3.one);
 
-        
+
+
+
         [Header("云朵颜色控制")]
 
         [Tooltip("云朵基础色")]
@@ -67,14 +72,19 @@ namespace UnityEngine.Rendering.Universal
         public bool IsTileCompatible() => false;
         const string shaderName = "Fsy/PP/Cloud";
 
-        //public override void Setup()
-        //{
-        //    if (material == null)
-        //    {
-        //        //使用CoreUtils.CreateEngineMaterial来从Shader创建材质
-        //        //CreateEngineMaterial：使用提供的着色器路径创建材质。hideFlags将被设置为 HideFlags.HideAndDontSave。
-        //        material = CoreUtils.CreateEngineMaterial(shaderName);
-        //    }
-        //}
+        public  void GetBound(Material mat)
+        {
+            var obj= GameObject.Find("CloudBox");
+            if (obj)
+            {
+                var box = obj.GetComponent<BoxCollider>();
+                if (mat)
+                {
+                    mat.SetVector("_BoundMin", box.bounds.min);
+                    mat.SetVector("_BoundMax", box.bounds.max);    
+                }
+            }
+    
+        }
     }
 }

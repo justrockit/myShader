@@ -4,6 +4,10 @@
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 
+
+ #define lightStep 8
+ #define CameraStep 32
+
 // 将不占空间的材质相关变量放在CBUFFER中，为了兼容SRP Batcher
 CBUFFER_START(UnityPerMaterial)
 float4 _BaseMap_ST;
@@ -23,6 +27,7 @@ float3 _Transmissivity;//透射比 控制RGB波长对透射影响的不同
 float3 _HgPhase;//相位函数 常量参数 用来描述云雾得性质，为0时代表各向同性
 float3 _MainLight;
 float3 _EdgeSoftnessThreshold;
+float3 _MoveSpeed;
 CBUFFER_END
 
 // 材质单独声明，使用DX11风格的新采样方法
@@ -158,9 +163,7 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
  }
 
 
- #define lightStep 8
 
- #define CameraStep 32
 
  //第二步
  //带 摩尔消光，带3d噪声图,带射线步进aabb的云朵
@@ -244,8 +247,7 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
    //计算距离参数
    /*********** TODO:这里的给传入的方向反向了一下是因为，rayBoxDst的计算是要从目标点到体积，而采样时，则是反过来，从position出发到主光源*/
 
-   float2 data=RayMarchingBoundary(_BoundMin,_BoundMax,position,1/lightpos);
-   float dstToBox=data.x;
+   float2 data=RayMarchingBoundary(_BoundMin,_BoundMax,position,lightpos);
    float dstInsideBox=data.y;
    int stepnum=lightStep;//步数
    float steplength=dstInsideBox/stepnum;
@@ -254,8 +256,9 @@ dstInsideBox：射线在长方体内部穿过的距离的参数值  rayDir * dst
    
     for(int i=0;i<stepnum;i++)
     {
-        totalDensity=totalDensity+steplength * max(0, sampleDensity(position));
-        position=position+steplengthvector;
+        position+=steplengthvector;
+        totalDensity+= max(0, sampleDensity(position)*steplength);
+       
     }
      return  totalDensity;
  }
@@ -324,7 +327,7 @@ float SchlickFunction(float costha,float g)
   return (1-k*k)/(4*PI*(1-k*costha)*(1-k*costha));
 
 }
-//亨利格林斯坦函数 模拟米氏散射
+//亨利格林斯坦函数 模拟米氏散射  costha：光线和视线夹角 逆光方向上的散射光强度较大
 float HgPhaseFunction(float costha,float g)
 {
     float g2 = g * g;
@@ -465,6 +468,7 @@ float3 RayMarchingWithBoundaryWithLightMoreMoreCorrect(float3 rayOrigin,float3 r
   // float  HgPhaseValue=HgPhaseFunction(costha,_HgPhase.x);
      
 /* 双瓣相位函数  基于两个亨利·格林斯坦相位函数插值模拟米氏散射   */
+
 float _costheta = dot(rayDir, _MainLightPosition.xyz);
 float HgPhaseValue = lerp(
     HgPhaseFunction(_costheta, _HgPhase.x), 
@@ -489,11 +493,11 @@ float HgPhaseValue = lerp(
               float3 attenuation=_LightAttenuation*_Transmissivity;
               energy=(energy-energy*exp(-attenuation*LightDensity))/attenuation;
 
-
-
-
             totalLightDensity+=energy *totalBeerDensity;
             totalBeerDensity*= exp(-curDensity*_Attenuation);
+              if (totalBeerDensity < 0.01)
+             break;
+        
             curPos+=steplengthvector;
             cursteplength+=steplength;
             continue;

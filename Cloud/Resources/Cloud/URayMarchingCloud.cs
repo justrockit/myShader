@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using static Unity.VisualScripting.Member;
+using static UnityEngine.Rendering.Universal.Internal.URayMarchingCloud;
 
 namespace UnityEngine.Rendering.Universal.Internal
 {
@@ -124,6 +125,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetVector("_Noise3DScale", m_rayMarchingCloudSetting.Noise3DScale.value/100);
             material.SetTexture("_Noise3D", m_rayMarchingCloudSetting.Noise3D.value);
 
+            material.SetVector("_MoveSpeed", m_rayMarchingCloudSetting.MoveSpeed.value);
             material.SetTexture("_FractalNoise3D", m_rayMarchingCloudSetting.FractalNoise3D.value);
             material.SetVector("_FractalNoise3DOffSet", m_rayMarchingCloudSetting.FractalNoise3DOffSet.value);
             material.SetVector("_FractalNoise3DScale", m_rayMarchingCloudSetting.FractalNoise3DScale.value/100);
@@ -138,7 +140,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetVector("_MainLight", m_rayMarchingCloudSetting.MainLight.value);
             
 
-
+            m_rayMarchingCloudSetting.GetBound(material);
             m_Source = renderer.cameraColorTargetHandle;
             //  cmd.GetTemporaryRT(_RayMarchingCloud, GetCompatibleDescriptor(), FilterMode.Bilinear);
            // destination= renderer.GetCameraColorFrontBuffer(cmd)
