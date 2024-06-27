@@ -132,6 +132,11 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetFloat("_DensityScale", m_rayMarchingCloudSetting.DensityScale.value);
             material.SetVector("_EdgeSoftnessThreshold", m_rayMarchingCloudSetting.EdgeSoftnessThreshold.value);
 
+            material.SetTexture("_WeatherMap", m_rayMarchingCloudSetting.WeatherMap.value);
+            material.SetTexture("_ShapeNoise", m_rayMarchingCloudSetting.ShapeNoise.value);
+            material.SetTexture("_MaskNoise", m_rayMarchingCloudSetting.MaskNoise.value);
+
+       
             material.SetFloat("_Attenuation", m_rayMarchingCloudSetting.Attenuation.value);
             material.SetFloat("_LightPower", m_rayMarchingCloudSetting.LightPower.value);
             material.SetFloat("_LightAttenuation", m_rayMarchingCloudSetting.LightAttenuation.value);
@@ -146,7 +151,7 @@ namespace UnityEngine.Rendering.Universal.Internal
            // destination= renderer.GetCameraColorFrontBuffer(cmd)
                 if (destination == null)
             {
-                RenderingUtils.ReAllocateIfNeeded(ref destination, GetCompatibleDescriptor(), FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_TempTarget");
+                RenderingUtils.ReAllocateIfNeeded(ref destination, GetCompatibleDescriptor(), FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_RayMarchingCloud");
          
             }
             material.SetTexture("_SourceTex", m_Source);

@@ -33,7 +33,13 @@ namespace UnityEngine.Rendering.Universal
         public Vector3Parameter MoveSpeed = new Vector3Parameter(Vector3.one);
 
 
+        [Tooltip("云朵整体造型形状")]
+        public Texture2DParameter WeatherMap = new Texture2DParameter(null);
+        [Tooltip("云朵单朵造型形状")]
+        public Texture2DParameter ShapeNoise = new Texture2DParameter(null);
 
+        [Tooltip("云朵采样3dNoise浓度值mask，")]
+        public Texture2DParameter MaskNoise = new Texture2DParameter(null);
 
         [Header("云朵颜色控制")]
 
