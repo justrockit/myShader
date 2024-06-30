@@ -30,11 +30,15 @@ namespace UnityEngine.Rendering.Universal
         public Vector3Parameter EdgeSoftnessThreshold = new Vector3Parameter(Vector3.one);
 
         [Tooltip("云朵的移动速度")]
-        public Vector3Parameter MoveSpeed = new Vector3Parameter(Vector3.one);
+        public Vector4Parameter MoveSpeed = new Vector4Parameter(Vector4.one);
 
 
-        [Tooltip("云朵整体造型形状")]
+        [Tooltip("云朵整体造型形状，用来形成云朵自然的梯度差")]
         public Texture2DParameter WeatherMap = new Texture2DParameter(null);
+        [Tooltip("云朵自然的梯度差的线性插值的值")]
+        public FloatParameter heightWeights = new FloatParameter(0.5f);
+
+
         [Tooltip("云朵单朵造型形状")]
         public Texture2DParameter ShapeNoise = new Texture2DParameter(null);
 
@@ -45,6 +49,14 @@ namespace UnityEngine.Rendering.Universal
 
         [Tooltip("云朵基础色")]
         public ColorParameter tint = new ColorParameter(Color.white, false, false, true);
+
+        [Tooltip("云朵上层颜色")]
+        public ColorParameter TopColor = new ColorParameter(Color.white, false, false, true);
+        [Tooltip("云朵下层颜色")]
+        public ColorParameter BottomColor = new ColorParameter(Color.white, false, false, true);
+        [Tooltip("云朵上下层颜色与主颜色的混合插值")]
+        public Vector2Parameter ColorOffSet = new Vector2Parameter(Vector2.one);
+
         [Tooltip("相机到屏幕某点的摩尔消光的衰减系数")]
         public FloatParameter Attenuation = new FloatParameter(1);
 
@@ -61,36 +73,36 @@ namespace UnityEngine.Rendering.Universal
             "。比如说，如果是中午的时候，抬头仰望云朵，它应该显得更为透亮，这是因为一个光子打到另外一个粒子上，" +
             "它并不是平均的向周围各个方向散射的，微粒的大小不同会导致其散射的角度不同。" +
             "不过无论如何，站在不同角度对云观察的结果应该是不同的。")]
-        public Vector3Parameter HgPhase = new Vector3Parameter(Vector3.one);
-      
+        public Vector4Parameter HgPhase = new Vector4Parameter(Vector3.one);
+
 
         public Vector3Parameter MainLight = new Vector3Parameter(Vector3.one);
 
 
 
-  
+
 
 
         /// <inheritdoc/>
-        public bool IsActive() =>true;
+        public bool IsActive() => true;
 
         /// <inheritdoc/>
         public bool IsTileCompatible() => false;
         const string shaderName = "Fsy/PP/Cloud";
 
-        public  void GetBound(Material mat)
+        public void GetBound(Material mat)
         {
-            var obj= GameObject.Find("CloudBox");
+            var obj = GameObject.Find("CloudBox");
             if (obj)
             {
                 var box = obj.GetComponent<BoxCollider>();
                 if (mat)
                 {
                     mat.SetVector("_BoundMin", box.bounds.min);
-                    mat.SetVector("_BoundMax", box.bounds.max);    
+                    mat.SetVector("_BoundMax", box.bounds.max);
                 }
             }
-    
+
         }
     }
 }

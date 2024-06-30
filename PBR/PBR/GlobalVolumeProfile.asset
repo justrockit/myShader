@@ -13,18 +13,69 @@ MonoBehaviour:
   m_Name: RayMarchingCloudSetting
   m_EditorClassIdentifier: 
   active: 1
-  tint:
+  DensityScale:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 0.3820755, b: 0.3820755, a: 1}
+    m_Value: 1.22
   Noise3D:
     m_OverrideState: 1
-    m_Value: {fileID: 11700000, guid: 4ed99a7ccafd728408a1bd580f472384, type: 2}
+    m_Value: {fileID: 11700000, guid: 40ce9daf7ebc1dc45995d30e0d611a49, type: 2}
   Noise3DScale:
     m_OverrideState: 1
-    m_Value: {x: 0.01, y: 0.01, z: 0.01}
+    m_Value: {x: 0.1, y: 0.1, z: 0.1}
   Noise3DOffSet:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1}
+    m_Value: {x: 0, y: 0, z: 0}
+  FractalNoise3D:
+    m_OverrideState: 1
+    m_Value: {fileID: 11700000, guid: de1943fd9171f304abdb22e3d2865159, type: 2}
+  FractalNoise3DScale:
+    m_OverrideState: 1
+    m_Value: {x: 3, y: 3, z: 3}
+  FractalNoise3DOffSet:
+    m_OverrideState: 1
+    m_Value: {x: 1, y: 1, z: 0}
+  BoundMin:
+    m_OverrideState: 1
+    m_Value: {x: -10, y: -10, z: -10}
+  BoundMax:
+    m_OverrideState: 1
+    m_Value: {x: 10, y: 10, z: 10}
+  EdgeSoftnessThreshold:
+    m_OverrideState: 1
+    m_Value: {x: 1, y: 1, z: 5}
+  MoveSpeed:
+    m_OverrideState: 1
+    m_Value: {x: 1, y: 5, z: 0.5, w: 5}
+  WeatherMap:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: bc830ae7850741344b2f0b6671d6de80, type: 3}
+  ShapeNoise:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: d25158ef7a361f6409bbeb2b86bb2118, type: 3}
+  MaskNoise:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: f9bcaf1da924d0742b9c341e5d80235f, type: 3}
+  tint:
+    m_OverrideState: 1
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  Attenuation:
+    m_OverrideState: 1
+    m_Value: 1.17
+  LightAttenuation:
+    m_OverrideState: 1
+    m_Value: 1.33
+  LightPower:
+    m_OverrideState: 1
+    m_Value: 1.6
+  Sigma:
+    m_OverrideState: 1
+    m_Value: {x: 0.1, y: 0.2, z: 0.6}
+  HgPhase:
+    m_OverrideState: 1
+    m_Value: {x: 0.3, y: 0.5, z: 0.5}
+  MainLight:
+    m_OverrideState: 1
+    m_Value: {x: 0.56, y: 1, z: 1}
 --- !u!114 &-7183886862433722445
 MonoBehaviour:
   m_ObjectHideFlags: 3
