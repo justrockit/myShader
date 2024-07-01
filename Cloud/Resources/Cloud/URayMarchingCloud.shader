@@ -102,7 +102,7 @@ Shader "Fsy/PP/Cloud"
                     float3 worldPosition = GetWorldPosition(input.positionCS);//用深度图获得世界坐标
                     float3 rayDir = normalize(worldPosition - _WorldSpaceCameraPos.xyz);
                     VertexPositionInputs vPInput=GetVertexPositionInputs(input.positionOS);      
-                    half4  SourceColor= SAMPLE_TEXTURE2D_X(_SourceTex, sampler_SourceTex, input.uv);
+                    half4  SourceColor= SAMPLE_TEXTURE2D_X(_MainTex, sampler_MainTex, input.uv);
                     half3 finalcolor=   RayMarchingWithBoundaryWithLightWithDynamic(_WorldSpaceCameraPos.xyz,rayDir,worldPosition,SourceColor);
                     return half4(finalcolor,1);
                     //endregion

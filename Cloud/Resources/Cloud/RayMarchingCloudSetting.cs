@@ -42,8 +42,22 @@ namespace UnityEngine.Rendering.Universal
         [Tooltip("云朵单朵造型形状")]
         public Texture2DParameter ShapeNoise = new Texture2DParameter(null);
 
+        [Tooltip("云朵单朵造型控制参数")]
+        public Vector4Parameter ShapeNoiseWeights = new Vector4Parameter(Vector4.one);
+
         [Tooltip("云朵采样3dNoise浓度值mask，")]
         public Texture2DParameter MaskNoise = new Texture2DParameter(null);
+
+        [Tooltip("云朵自然的梯度差的线性插值的值")]
+        public FloatParameter detailNoiseWeight = new FloatParameter(0.5f);
+
+          [Tooltip("云朵自然的梯度差的线性插值的值")]
+        public FloatParameter detailWeights = new FloatParameter(0.5f);
+        [Tooltip("云朵自然的梯度差的线性插值的值")]
+        public FloatParameter densityOffset = new FloatParameter(1f);
+
+
+
 
         [Header("云朵颜色控制")]
 
@@ -76,7 +90,7 @@ namespace UnityEngine.Rendering.Universal
         public Vector4Parameter HgPhase = new Vector4Parameter(Vector3.one);
 
 
-        public Vector3Parameter MainLight = new Vector3Parameter(Vector3.one);
+      
 
 
 

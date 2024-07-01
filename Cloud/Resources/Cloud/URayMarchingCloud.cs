@@ -23,11 +23,8 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         URayMarchingCloudPass m_ScriptablePass;
         RenderTargetHandle m_CameraColorAttachment;
-        //  RenderTargetHandle m_CloudAttachment;
         RTHandle destination;
-        //RenderTargetHandle m_CameraDepthAttachment;
-        //RenderTargetHandle m_AfterPostProcessColor;
-
+  
         public RayMarchingCloudSetting m_CustomFirstBlitSetting = new RayMarchingCloudSetting();
 
         public override void Create()
@@ -35,7 +32,6 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_ScriptablePass = new URayMarchingCloudPass(m_CustomFirstBlitSetting.renderPassEvent);
 
             m_CameraColorAttachment.Init("_CameraColorTexture");
-            //  m_CloudAttachment.Init("CloudAttachment");
             var m_MagentaTexture = new Texture2D(1, 1, GraphicsFormat.R8G8B8A8_SRGB, TextureCreationFlags.None) { name = "Cloud" };
             m_MagentaTexture.SetPixel(0, 0, Color.magenta);
             m_MagentaTexture.Apply();
@@ -68,28 +64,18 @@ namespace UnityEngine.Rendering.Universal.Internal
         RayMarchingCloudSetting m_rayMarchingCloudSetting;
         public static readonly int _RayMarchingCloud = Shader.PropertyToID("_RayMarchingCloud");
         RTHandle destination;
+        RenderTargetIdentifier destinationBuffer;
+        RenderTargetIdentifier cameraColorTarget;
         public URayMarchingCloudPass(RenderPassEvent evt)
 
         {
-            // m_BlitMaterial = blitMaterial;
             renderPassEvent = evt;
-
         }
 
-        /// <summary>
-        /// Configure the pass
-        /// </summary>
-        /// <param name="baseDescriptor"></param>
-        /// <param name="colorHandle"></param>
+
         public void Setup(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle, Material BlitMaterial)
         {
-            // m_Source = colorHandle;
-            //if (m_Source?.nameID != colorHandle.Identifier())
-            //    m_Source = RTHandles.Alloc(colorHandle.Identifier());
-
-            //if (destination?.nameID != _destination.Identifier())
-            //    destination = RTHandles.Alloc(_destination.Identifier());
-
+    
             m_BlitMaterial = BlitMaterial;
             m_Descriptor = baseDescriptor;
             m_TargetDimension = baseDescriptor.dimension;
@@ -142,40 +128,42 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetFloat("_LightAttenuation", m_rayMarchingCloudSetting.LightAttenuation.value);
             material.SetVector("_Transmissivity", m_rayMarchingCloudSetting.Sigma.value);
             material.SetVector("_HgPhase", m_rayMarchingCloudSetting.HgPhase.value);
-            material.SetVector("_MainLight", m_rayMarchingCloudSetting.MainLight.value);
+            material.SetVector("_ShapeNoiseWeights", m_rayMarchingCloudSetting.ShapeNoiseWeights.value);
             material.SetVector("_TopColor", m_rayMarchingCloudSetting.TopColor.value);
             material.SetVector("_BottomColor", m_rayMarchingCloudSetting.BottomColor.value);
             material.SetVector("_ColorOffSet", m_rayMarchingCloudSetting.ColorOffSet.value);
             material.SetFloat("_heightWeights", m_rayMarchingCloudSetting.heightWeights.value);
 
+            material.SetFloat("_detailWeights", m_rayMarchingCloudSetting.detailWeights.value);
+            material.SetFloat("_detailNoiseWeight", m_rayMarchingCloudSetting.detailNoiseWeight.value);
+ material.SetFloat("_densityOffset", m_rayMarchingCloudSetting.densityOffset.value);
+            
+
 
             m_rayMarchingCloudSetting.GetBound(material);
-            m_Source = renderer.cameraColorTargetHandle;
-            //  cmd.GetTemporaryRT(_RayMarchingCloud, GetCompatibleDescriptor(), FilterMode.Bilinear);
-            // destination= renderer.GetCameraColorFrontBuffer(cmd)
-            if (destination == null)
-            {
-                RenderingUtils.ReAllocateIfNeeded(ref destination, GetCompatibleDescriptor(), FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_RayMarchingCloud");
 
-            }
-            material.SetTexture("_SourceTex", m_Source);
+            cameraColorTarget = renderingData.cameraData.renderer.cameraColorTarget;
+         //   m_Source = renderer.cameraColorTargetHandle;
+            RenderTextureDescriptor temporaryTargetDescriptor = renderingData.cameraData.cameraTargetDescriptor;
+            temporaryTargetDescriptor.depthBufferBits = 0;
+            cmd.GetTemporaryRT(_RayMarchingCloud, temporaryTargetDescriptor, FilterMode.Bilinear);
+            destinationBuffer = new RenderTargetIdentifier(_RayMarchingCloud);
+            //if (destination == null)
+            //{
+            //    RenderingUtils.ReAllocateIfNeeded(ref destination, GetCompatibleDescriptor(), FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_RayMarchingCloud");
+
+            //}
+           material.SetTexture("_MainTex", renderer.cameraColorTargetHandle);
             //Blitter.BlitCameraTexture(cmd, m_Source, destination, material,0);
-            cmd.Blit(m_Source.nameID, destination.nameID, material, 0);
-            //Blitter.BlitCameraTexture(cmd, destination, m_Source, material, 0);
+         //   cmd.Blit(m_Source.nameID, destination.nameID, material, 0);
+            //Blitter.BlitCameraTexture(cmd, destination, m_Source, material, 0)
+         //   cmd.Blit(destination.nameID, m_Source.nameID, material, 0);
 
-            cmd.Blit(destination.nameID, m_Source.nameID, material, 0);
+            Blit(cmd, cameraColorTarget, destinationBuffer);
+            Blit(cmd, destinationBuffer, cameraColorTarget, material);
         }
 
-        // 相机初始化时执行
-        //public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
-        //{
-        //    var descriptor = renderingData.cameraData.cameraTargetDescriptor;
-        //    descriptor.msaaSamples = 1;
-        //    descriptor.depthBufferBits = 0;
-        //    // 分配临时纹理
-        //  //  RenderingUtils.ReAllocateIfNeeded(ref destination, descriptor, name: "rayMarchingCloud");
-
-        //}
+     
 
 
         public override void OnCameraCleanup(CommandBuffer cmd)

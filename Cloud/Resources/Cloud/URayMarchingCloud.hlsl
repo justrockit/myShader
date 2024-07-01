@@ -13,7 +13,7 @@
 CBUFFER_START(UnityPerMaterial)
 float4 _BaseMap_ST;
 half4 _BaseColor;
-float4 _SourceTex_TexelSize;
+float4 _MainTex_TexelSize;
 float3 _BoundMin;
 float3 _BoundMax;
 float3 _Noise3DScale;//噪声图缩放比
@@ -26,13 +26,16 @@ float _LightPower;//光照散射强度控制参数
 float _LightAttenuation;//光照的摩尔消光系数 越大越透
 float3 _Transmissivity;//透射比 控制RGB波长对透射影响的不同
 float4 _HgPhase;//相位函数 常量参数 用来描述云雾得性质，为0时代表各向同性
-float3 _MainLight;
 float3 _EdgeSoftnessThreshold;
 float4 _MoveSpeed;
 float3 _TopColor;
 float3 _BottomColor;
 float2 _ColorOffSet;
 float _heightWeights;
+float4 _ShapeNoiseWeights;
+float _detailWeights;
+ float _detailNoiseWeight;
+ float _densityOffset;
 CBUFFER_END
 
 
@@ -52,8 +55,8 @@ SAMPLER(sampler_ShapeNoise);
 TEXTURE2D (_WeatherMap);
 SAMPLER(sampler_WeatherMap);
 
-TEXTURE2D_X(_SourceTex);
-SAMPLER(sampler_SourceTex);
+TEXTURE2D_X(_MainTex);
+SAMPLER(sampler_MainTex);
 sampler3D _Noise3D;
 sampler3D _FractalNoise3D;//分形噪声，优化云朵边缘
 //计算采样各地点深度值得到改点的世界坐标
@@ -152,27 +155,48 @@ float3 BeerPowder(float3 d, float a)
         //用来采样2d贴图
         float2 uv= (size.xz*0.5+(position.xz-center.xz));
         uv=float2(uv.x/size.x,uv.y/size.z);
-         //用来采样mask贴图
+         //用来采样mask贴图 ,用来扭曲3D 噪音
         float3 mask=  SAMPLE_TEXTURE2D(_MaskNoise, sampler_MaskNoise, (uv+samplingUVW.xy*MaskNoiseSpeedScale));
           //用来采样weather贴图 ,这是用来对梯度值进行重映射的，用于决定云层或体积密度在不同高度上的变化
         float3 weather=  SAMPLE_TEXTURE2D(_WeatherMap, sampler_WeatherMap, (uv+samplingUVW.xy*ShapeNoiseSpeedScale));
 
 
-/*  云层或体积密度在不同高度上的变化*/
+/*  
+云层或体积密度在不同高度上的变化 
+形成云朵上窄下宽的形状
+*/
      float gmin=Remap(weather.x,0,1,0.1,0.6);
      float gmax=Remap(weather.x,0,1,gmin,0.9);
      float heightPercent=(position.y-_BoundMin.y)/size.y;
      float heightGradient = saturate(Remap(heightPercent, 0.0, gmin, 0, 1)) * saturate(Remap(heightPercent, 1, gmax, 0, 1));
      float heightGradient2 = saturate(Remap(heightPercent, 0.0, weather.r, 1, 0)) * saturate(Remap(heightPercent, 0.0, gmin, 0, 1));
     heightGradient = saturate(lerp(heightGradient, heightGradient2,_heightWeights));
-    softness=softness*heightGradient;
+    heightGradient*=softness;
+ /*
+ 云层或体积密度在不同高度上的变化
+ */
 
- /* 云层或体积密度在不同高度上的变化*/
+    float4  density=tex3D(_Noise3D, float4(samplingUVW+mask.r*_MoveSpeed.z*0.1,0.0));
+    float  density2=tex3D(_FractalNoise3D,samplingFractalUVW+density*_MoveSpeed.w*0.2).r;
 
-        float  density=tex3D(_Noise3D,samplingUVW+mask.r*_MoveSpeed.z*0.1).r;
-        float  density2=tex3D(_FractalNoise3D,samplingFractalUVW+density*_MoveSpeed.w*0.2).r;
 
-        return  max(0,density-density2)*_DensityScale*softness*softness ;
+/*  
+云层单体宽度的控制
+*/
+    float4 normalizedShapeWeights=_ShapeNoiseWeights/dot(_ShapeNoiseWeights,1);//归一化 ，点乘1等于x+y+z+w
+    float shapeFBM=dot(normalizedShapeWeights,density)*heightGradient;
+    float baseShapeDensity=shapeFBM+ _densityOffset * 0.01;
+    if (baseShapeDensity > 0)
+    {
+        float detailFBM = pow(density2, _detailWeights);
+        float oneMinusShape = 1 - baseShapeDensity;
+        float detailErodeWeight = oneMinusShape * oneMinusShape * oneMinusShape;
+        float cloudDensity = baseShapeDensity - detailFBM * detailErodeWeight * _detailNoiseWeight;
+
+        return saturate(cloudDensity * _DensityScale);
+    }
+
+    return  0 ;
  }
 
 // //TODO 模棱两可
@@ -237,12 +261,8 @@ cloudColor=lerp( _BottomColor,cloudColor,saturate(pow(beervalue*_ColorOffSet.y,3
  带相位函数 
  带 Beers Powder Function
  带 移动
- 带 云朵轮廓 整体形状noise的
-
-  的云朵
-
+ 带 云朵轮廓 整体形状noise的云朵
  */
-
 float3 RayMarchingWithBoundaryWithLightWithDynamic(float3 rayOrigin,float3 rayDir,float3 positionWS,float4 sourceColor)
  {
 
