@@ -24,7 +24,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         URayMarchingCloudPass m_ScriptablePass;
         RenderTargetHandle m_CameraColorAttachment;
         RTHandle destination;
-  
+
         public RayMarchingCloudSetting m_CustomFirstBlitSetting = new RayMarchingCloudSetting();
 
         public override void Create()
@@ -75,7 +75,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         public void Setup(RenderTextureDescriptor baseDescriptor, RenderTargetHandle colorHandle, Material BlitMaterial)
         {
-    
+
             m_BlitMaterial = BlitMaterial;
             m_Descriptor = baseDescriptor;
             m_TargetDimension = baseDescriptor.dimension;
@@ -119,7 +119,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             material.SetVector("_EdgeSoftnessThreshold", m_rayMarchingCloudSetting.EdgeSoftnessThreshold.value);
 
             material.SetTexture("_WeatherMap", m_rayMarchingCloudSetting.WeatherMap.value);
-            material.SetTexture("_ShapeNoise", m_rayMarchingCloudSetting.ShapeNoise.value);
+            material.SetTexture("_BlueNoise", m_rayMarchingCloudSetting.BlueNoise.value);
             material.SetTexture("_MaskNoise", m_rayMarchingCloudSetting.MaskNoise.value);
 
 
@@ -136,14 +136,14 @@ namespace UnityEngine.Rendering.Universal.Internal
 
             material.SetFloat("_detailWeights", m_rayMarchingCloudSetting.detailWeights.value);
             material.SetFloat("_detailNoiseWeight", m_rayMarchingCloudSetting.detailNoiseWeight.value);
- material.SetFloat("_densityOffset", m_rayMarchingCloudSetting.densityOffset.value);
-            
+            material.SetFloat("_densityOffset", m_rayMarchingCloudSetting.densityOffset.value);
+
 
 
             m_rayMarchingCloudSetting.GetBound(material);
 
             cameraColorTarget = renderingData.cameraData.renderer.cameraColorTarget;
-         //   m_Source = renderer.cameraColorTargetHandle;
+            //   m_Source = renderer.cameraColorTargetHandle;
             RenderTextureDescriptor temporaryTargetDescriptor = renderingData.cameraData.cameraTargetDescriptor;
             temporaryTargetDescriptor.depthBufferBits = 0;
             cmd.GetTemporaryRT(_RayMarchingCloud, temporaryTargetDescriptor, FilterMode.Bilinear);
@@ -153,17 +153,17 @@ namespace UnityEngine.Rendering.Universal.Internal
             //    RenderingUtils.ReAllocateIfNeeded(ref destination, GetCompatibleDescriptor(), FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_RayMarchingCloud");
 
             //}
-           material.SetTexture("_MainTex", renderer.cameraColorTargetHandle);
+            material.SetTexture("_MainTex", renderer.cameraColorTargetHandle);
             //Blitter.BlitCameraTexture(cmd, m_Source, destination, material,0);
-         //   cmd.Blit(m_Source.nameID, destination.nameID, material, 0);
+            //   cmd.Blit(m_Source.nameID, destination.nameID, material, 0);
             //Blitter.BlitCameraTexture(cmd, destination, m_Source, material, 0)
-         //   cmd.Blit(destination.nameID, m_Source.nameID, material, 0);
+            //   cmd.Blit(destination.nameID, m_Source.nameID, material, 0);
 
-            Blit(cmd, cameraColorTarget, destinationBuffer);
-            Blit(cmd, destinationBuffer, cameraColorTarget, material);
+            cmd.BlitFullscreenTriangle(cmd, cameraColorTarget, destinationBuffer);
+            cmd.BlitFullscreenTriangle(cmd, destinationBuffer, cameraColorTarget, material);
         }
 
-     
+
 
 
         public override void OnCameraCleanup(CommandBuffer cmd)

@@ -6,7 +6,7 @@
 
 
 #define lightStep 8
-#define CameraStep 32
+#define CameraStep 64
 #define MaskNoiseSpeedScale 0.4
 #define ShapeNoiseSpeedScale 0.4
 // 将不占空间的材质相关变量放在CBUFFER中，为了兼容SRP Batcher
@@ -49,8 +49,10 @@ SAMPLER(sampler_BaseMap);
 TEXTURE2D (_MaskNoise);
 SAMPLER(sampler_MaskNoise);
 
-TEXTURE2D (_ShapeNoise);
-SAMPLER(sampler_ShapeNoise);
+TEXTURE2D (_BlueNoise);
+SAMPLER(sample_BlueNoise);
+
+
 
 TEXTURE2D (_WeatherMap);
 SAMPLER(sampler_WeatherMap);

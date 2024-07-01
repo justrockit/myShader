@@ -15,25 +15,25 @@ MonoBehaviour:
   active: 1
   DensityScale:
     m_OverrideState: 1
-    m_Value: 0.1
+    m_Value: 0.67
   Noise3D:
     m_OverrideState: 1
-    m_Value: {fileID: 11700000, guid: cb4b6eb5c9e81414487f4f275cfce048, type: 2}
+    m_Value: {fileID: 11700000, guid: 4ed99a7ccafd728408a1bd580f472384, type: 2}
   Noise3DScale:
     m_OverrideState: 1
-    m_Value: {x: 0.01, y: 0.1, z: 0.1}
+    m_Value: {x: 0.2, y: 0.2, z: 0.2}
   Noise3DOffSet:
     m_OverrideState: 1
-    m_Value: {x: 0.1, y: 0.1, z: 0}
+    m_Value: {x: 1, y: 0.2, z: 0}
   FractalNoise3D:
     m_OverrideState: 1
-    m_Value: {fileID: 11700000, guid: ee3251080e1789d4bab1803dfa4af693, type: 2}
+    m_Value: {fileID: 11700000, guid: dde5d5a1451767d48b0ea30f597f1983, type: 2}
   FractalNoise3DScale:
     m_OverrideState: 1
-    m_Value: {x: 0.1, y: 1, z: 0.08}
+    m_Value: {x: 2.2, y: 2.2, z: 2.2}
   FractalNoise3DOffSet:
     m_OverrideState: 1
-    m_Value: {x: 0, y: 1, z: 0}
+    m_Value: {x: 1, y: 0.2, z: 0}
   BoundMin:
     m_OverrideState: 0
     m_Value: {x: -10, y: -10, z: -10}
@@ -45,33 +45,33 @@ MonoBehaviour:
     m_Value: {x: 10, y: 2, z: 10}
   MoveSpeed:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 0, w: 0}
+    m_Value: {x: 0.1, y: 0.1, z: 0, w: 0}
   WeatherMap:
     m_OverrideState: 1
     m_Value: {fileID: 2800000, guid: bc830ae7850741344b2f0b6671d6de80, type: 3}
   heightWeights:
     m_OverrideState: 1
-    m_Value: 0.93
+    m_Value: 0.5
   ShapeNoise:
     m_OverrideState: 1
     m_Value: {fileID: 2800000, guid: d25158ef7a361f6409bbeb2b86bb2118, type: 3}
   ShapeNoiseWeights:
     m_OverrideState: 1
-    m_Value: {x: 1.65, y: 2.85, z: -3.05, w: -0.24}
+    m_Value: {x: 4.63, y: 19.9, z: -3.18, w: -18.4}
   MaskNoise:
     m_OverrideState: 1
     m_Value: {fileID: 2800000, guid: f9bcaf1da924d0742b9c341e5d80235f, type: 3}
   detailNoiseWeight:
     m_OverrideState: 1
-    m_Value: 0.41
+    m_Value: 6.4
   detailWeights:
     m_OverrideState: 1
-    m_Value: 2.03
+    m_Value: 2.06
   densityOffset:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: -14.74
   tint:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   TopColor:
     m_OverrideState: 1
@@ -81,13 +81,13 @@ MonoBehaviour:
     m_Value: {r: 0.3764706, g: 0.4745098, b: 0.5568628, a: 1}
   ColorOffSet:
     m_OverrideState: 1
-    m_Value: {x: 0.85, y: 0.85}
+    m_Value: {x: 0.86, y: 0.82}
   Attenuation:
     m_OverrideState: 1
-    m_Value: 1.17
+    m_Value: 0.3
   LightAttenuation:
     m_OverrideState: 1
-    m_Value: 1.33
+    m_Value: 0.16
   LightPower:
     m_OverrideState: 1
     m_Value: 1
@@ -96,7 +96,7 @@ MonoBehaviour:
     m_Value: {x: 0.1, y: 0.2, z: 0.6}
   HgPhase:
     m_OverrideState: 1
-    m_Value: {x: 0.3, y: 0.5, z: 0.5, w: 0}
+    m_Value: {x: 3.43, y: 0.25, z: 0.29, w: 0.6}
 --- !u!114 &-7183886862433722445
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -109,7 +109,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66f335fb1ffd8684294ad653bf1c7564, type: 3}
   m_Name: ColorAdjustments
   m_EditorClassIdentifier: 
-  active: 0
+  active: 1
   postExposure:
     m_OverrideState: 1
     m_Value: 0
@@ -124,7 +124,69 @@ MonoBehaviour:
     m_Value: 0
   saturation:
     m_OverrideState: 1
-    m_Value: -1.7
+    m_Value: 52
+--- !u!114 &-5052758753347132011
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 558a8e2b6826cf840aae193990ba9f2e, type: 3}
+  m_Name: ShadowsMidtonesHighlights
+  m_EditorClassIdentifier: 
+  active: 1
+  shadows:
+    m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
+  midtones:
+    m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
+  highlights:
+    m_OverrideState: 0
+    m_Value: {x: 1, y: 1, z: 1, w: 0}
+  shadowsStart:
+    m_OverrideState: 0
+    m_Value: 0
+  shadowsEnd:
+    m_OverrideState: 0
+    m_Value: 0.3
+  highlightsStart:
+    m_OverrideState: 0
+    m_Value: 0.55
+  highlightsEnd:
+    m_OverrideState: 0
+    m_Value: 1
+--- !u!114 &-3063203828836848387
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 899c54efeace73346a0a16faa3afe726, type: 3}
+  m_Name: Vignette
+  m_EditorClassIdentifier: 
+  active: 1
+  color:
+    m_OverrideState: 0
+    m_Value: {r: 0, g: 0, b: 0, a: 1}
+  center:
+    m_OverrideState: 0
+    m_Value: {x: 0.5, y: 0.5}
+  intensity:
+    m_OverrideState: 0
+    m_Value: 0
+  smoothness:
+    m_OverrideState: 0
+    m_Value: 0.2
+  rounded:
+    m_OverrideState: 0
+    m_Value: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -141,7 +203,8 @@ MonoBehaviour:
   - {fileID: 1881579288749618558}
   - {fileID: -7236683974548254238}
   - {fileID: -7183886862433722445}
-  - {fileID: 4348040383303040367}
+  - {fileID: -3063203828836848387}
+  - {fileID: -5052758753347132011}
 --- !u!114 &1881579288749618558
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -154,32 +217,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97c23e3b12dc18c42a140437e53d3951, type: 3}
   m_Name: Tonemapping
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   mode:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &4348040383303040367
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 02ddba9a30f45244eb75f396cffdf813, type: 3}
-  m_Name: HueBrightnessSaturationContrast
-  m_EditorClassIdentifier: 
-  active: 0
-  hue:
-    m_OverrideState: 1
-    m_Value: 1.274
-  brightness:
-    m_OverrideState: 1
-    m_Value: 1.96
-  saturation:
-    m_OverrideState: 1
-    m_Value: 1.98
-  contrast:
-    m_OverrideState: 1
-    m_Value: 2.28
