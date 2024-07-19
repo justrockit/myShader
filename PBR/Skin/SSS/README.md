@@ -1,15 +1,39 @@
+# HDRP中的Subsurface Scattering 
 
-# HDRP中的Subsurface Scattering https://zhuanlan.zhihu.com/p/450046635
+# https://zhuanlan.zhihu.com/p/450046635
+
 在次表面散射Command中主要有两个绘制操作，一个是使用CS计算次表面散射，一个是将散射结果和前向照明混合，这里可以根据图形流水线的特点从下向上追本溯源。
+
+- ![image-20240719210718979](C:\Users\fushengyang\AppData\Roaming\Typora\typora-user-images\image-20240719210718979.png)
+
+
+
+_SSSBufferTexture就是在前向渲染中的MRT输出中的其中之一
+
+_DepthTexture就是全部Opaque的深度图；_
+
+_IrradianceSource是上面说的target1，漫反射照明。
+
+_CoarseStencilBuffer应该是模版缓冲Buffer
+
+_SssSampleBudget代表着次表面散射采样次数的最大值，
+
+
+
+
+
+
+
+
 
 
 # URPScreenSpaceSSS
-![alt text](image-1.png)![alt text](image-2.png)
+<img src="image-1.png" alt="alt text" style="zoom:50%;" /><img src="image-2.png" alt="alt text" style="zoom:50%;" />
 思路：1.完成物体材质着色器   2.后处理代码 和后处理着色器
 
 前言：
 BRDF、BSSRDF、BTDF、BSDF的关系
-![alt text](image.png)
+<img src="image.png" alt="alt text" style="zoom:50%;" />
 如上图，光线从一种介质射向另外一种介质时，有反射，次表面散射、透射三种交互形态：
 其普通反射的行为用BRDF描述
 其次表现散射的行为用 BSSRDF描述
