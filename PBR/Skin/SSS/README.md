@@ -4,9 +4,7 @@
 
 在次表面散射Command中主要有两个绘制操作，一个是使用CS计算次表面散射，一个是将散射结果和前向照明混合，这里可以根据图形流水线的特点从下向上追本溯源。
 
-- ![image-20240719210718979](C:\Users\fushengyang\AppData\Roaming\Typora\typora-user-images\image-20240719210718979.png)
-
-
+<img src="C:\Users\admin\AppData\Roaming\Typora\typora-user-images\image-20240720002433003.png" alt="image-20240720002433003" style="zoom:80%;" />
 
 _SSSBufferTexture就是在前向渲染中的MRT输出中的其中之一
 
@@ -51,7 +49,6 @@ BSSRDF（Bidirectional Surface Scattering Reflectance Distribution Function，�
 
 
 # URPSeparableSSS
-
 
 
 
